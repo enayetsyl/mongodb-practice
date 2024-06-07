@@ -1,0 +1,241 @@
+# Practicing MongoDB Queries with 200,000 Records: A Real-Life Scenario Simulation
+
+## The objective of this blog 
+
+- The aim of this blog is to practicing MongoDB query using 22 problems. We will use 200,000 records for this exercise. This large amount of data will help us simulate a real life scenario.
+
+Download the data in json format from the following link. 
+people: https://drive.google.com/file/d/1KElJF_gIVF54lY5l1TC1WOj6TVkTQIs9/view?usp=drive_link
+
+order: https://drive.google.com/file/d/1JMRClMy8vBS_AH4X7Pd1ZW5dysfYIT89/view?usp=sharing
+
+customer: https://drive.google.com/file/d/1O_VXeiRqwY5BZi2lcG8sxWaaejSfl4t6/view?usp=sharing
+
+user: https://drive.google.com/file/d/1fRQqjKioxDvBu0k2YCjcdOMXOEahrRoI/view?usp=sharing
+
+Import these data into your MongoDB Compass. Save them in four collection with the name of people, order, customer and user.  If you don't know how to do that, you can check out my following blog.
+
+https://medium.com/@enayetflweb/how-to-import-data-into-mongodb-compass-a-step-by-step-guide-2c59edd89c14
+
+### Setting up an express app
+
+- We will start by setting an express app so that we don't have to run query in MongoDB Compass. 
+
+- Run following commands to setup an express project.
+
+```javascript
+npm init -y
+npm i express mongoose nodemon dotenv morgan
+```
+
+- Open the package.json file and following code inside it. Start script is for running the server.js file using nodemon and type set to module so we can use import syntax instead of require. 
+
+```javascript
+"scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon src/server.js"
+  },
+  "type": "module",
+```
+
+- Click on new file icon in vs Code and type "src/app/config/index.js" and hit enter. Inside the src folder create app.js and server.js file. In the root create .env and .gitignore file. Paste the following code in the files. Inside app folder create modules folder and inside that create query folder and inside that create two file named queryControllers.js and queryRoutes.js.
+
+```javascript
+// File name index.js
+
+import dotenv from 'dotenv';
+import path from 'path';
+
+dotenv.config({ path: path.join((process.cwd(), '.env')) });
+
+export default {
+  port: process.env.PORT,
+  database_url: process.env.DATABASE_URL,
+};
+
+// .env file
+DATABASE_URL= Insert your MongoDB connection string here.
+PORT=5000
+
+// app.js file
+
+import express from 'express'
+import morgan from 'morgan';
+import { QueryRoutes } from './app/modules/query/queryRoutes.js'
+
+const app = express()
+
+// Morgan setup for logging HTTP requests
+app.use(morgan('dev'));
+app.use(express.json())
+
+// Routes
+app.use("/api/query", QueryRoutes)
+
+app.get("/", (req, res) => {
+  res.send("Welcome to MongoDB practice.")
+})
+
+
+
+export default app;
+
+// server.js file
+
+import mongoose from "mongoose";
+import config from "./app/config/index.js";
+import app from "./app.js";
+
+async function main() {
+  try {
+    await mongoose.connect(config.database_url)
+
+    app.listen(config.port, () => {
+      console.log(`MongoDB practicing app is listening on port ${config.port}`)
+    })
+
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+main()
+
+// .gitignore file
+
+.env 
+node_modules
+
+// queryRoutes.js file
+
+import express from 'express'
+import { QueryControllers } from './queryControllers.js';
+
+const router = express.Router()
+
+router.get("/problem1", QueryControllers.problem1)
+
+export const QueryRoutes = router;
+
+// queryController.js file
+
+const problem1 = async (req, res) => {
+
+}
+
+
+export const QueryControllers = {
+  problem1, 
+}
+
+```
+
+- I will provide a brief explanation about above code.
+
+- In the index.js file i configure the environment and variables and export them. So that a single file will be responsible for exporting all the environmental variables.
+
+- In the app.js file the main thing is the query routes. All query routes will be prefixed by "/api/query". I wrote the individual route in the queryRouter.js file. I used morgan package here so that in your console after each database operation you can see how much time is taken. 
+
+- In the server.js file i create the MongoDB connection and it is the starting point of your application. 
+
+- In the queryRoutes.js file i created a route for problem1. The logic will be written in the queryControllers file. I will create a new route for each of the problem in this file.
+
+- In the queryControllers.js file i created a function called problem1 and exported it. I will use this function to solve the problem one. I will create a new function for each of the problem in this file.
+
+### MongoDB Query - Problem 1
+
+- Requirement: Find all users who are located in Marseille. Query the "people" collection.
+
+```javascript
+{
+  _id: ObjectId("64ed4ed7345377d730c0ac99"),
+  name: 'John Doe',
+  email: 'johndoe@example.com',
+  age: 28,
+  address: {
+    street: '123 Main St',
+    city: 'Marseille',
+    state: 'NY',
+    zipcode: '10001'
+  },
+  favorites: {
+    color: 'blue',
+    food: 'pizza',
+    movie: 'The Shawshank Redemption'
+  },
+  friends: [
+    {
+      name: 'Jane Smith',
+      email: 'janesmith@example.com'
+    },
+    {
+      name: 'Mike Johnson',
+      email: 'mikejohnson@example.com'
+    }
+  ]
+}
+```
+
+- If we look at the data, we can see that "Marseille" is the name of a city, and it is inside the "address" object. In the search query we should use "address.city: Marseille" to get the result.
+
+- The solution is as follows:
+
+```javascript
+const problem1 = async (req, res) => {
+  const peopleCollection = mongoose.connection.db.collection("people");
+  try {
+    const result = await peopleCollection.find({ "address.city": "Marseille" }).toArray();
+  
+    res.status(200).json({message: `Fetched ${result.length} documents`, result});
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+```
+
+- In the response, we will get the document count as well as data. 
+
+- Using postman or a browser if you hit "http://localhost:5000/api/query/problem1" route you will get 27693 documents. "GET /api/query/problem1 200 18907.387 ms - 26272327" This is the response from morgan in my console. This query took 19 seconds to return the data. 
+
+- Learning: How to query a nested field.
+
+### MongoDB Query - Problem 2
+
+- Requirement: Find the user(s) with the email "johndoe@example.com" and retrieve their favorite movie. Query this in the user collection.
+
+- Here we get the email as a query from the user and search the email field in the database. We also have to use projection properties to return only the email and favorites movie fields. By limiting the fields, we can save bandwidth and load the webpage faster in the browser. 
+
+- The solution is as follows
+
+```javascript
+// In queryRoutes.js file add following
+
+router.get("/problem2", QueryControllers.problem2)
+
+
+// In queryControllers.js file add following
+
+const problem2 = async (req, res) => {
+  const userCollection = mongoose.connection.db.collection("user");
+  try {
+    const { email } = req.query
+    const result = await userCollection.find(
+      { email }, { projection: { email: 1, "favorites.movie": 1 } }).toArray();
+
+    res.status(200).json({ message: `Fetched ${result.length} documents`, result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+export const QueryControllers = {
+  problem1, problem2
+}
+```
+
+- Using postman or a browser if you hit "http://localhost:5000/api/query/problem2?email=johndoe@example.com"route you will get 3 documents. "GET /api/query/problem2?email=johndoe@example.com 200 296.225 ms - 386" This is the response from morgan in my console. This query took 386 milliseconds to return the data. 
+
+- Learning: How to query using a field value. How to get a query parameter from the frontend. How to use projection to send necessary data to the frontend. 
