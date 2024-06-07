@@ -67,7 +67,22 @@ const problem5 = async (req, res) => {
   }
 };
 
+const problem6 = async (req, res) => {
+  const peopleCollection = mongoose.connection.db.collection("people");
+  try {
+    const { firstName, lastName, dob } = req.query
+    
+    const result = await peopleCollection.find({firstName, lastName, birthDate: {$lt: new Date(dob)}}).count()
+    // const result = await peopleCollection.countDocuments({firstName, lastName, birthDate: {$lt: new Date(dob)}})
+
+    res.status(200).json({ message: `Fetched ${result} documents`, result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 
 export const QueryControllers = {
-  problem1, problem2, problem3, problem4, problem5
+  problem1, problem2, problem3, problem4, problem5, problem6
 }

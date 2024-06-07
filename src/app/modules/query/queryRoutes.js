@@ -9,6 +9,7 @@ router.get("/problem2", QueryControllers.problem2)
 router.delete("/problem3", QueryControllers.problem3)
 router.get("/problem4", QueryControllers.problem4)
 router.get("/problem5", QueryControllers.problem5)
+router.get("/problem6", QueryControllers.problem6)
 
 
 export const QueryRoutes = router;
