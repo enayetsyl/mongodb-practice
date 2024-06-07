@@ -239,3 +239,126 @@ export const QueryControllers = {
 - Using postman or a browser if you hit "http://localhost:5000/api/query/problem2?email=johndoe@example.com"route you will get 3 documents. "GET /api/query/problem2?email=johndoe@example.com 200 296.225 ms - 386" This is the response from morgan in my console. This query took 386 milliseconds to return the data. 
 
 - Learning: How to query using a field value. How to get a query parameter from the frontend. How to use projection to send necessary data to the frontend. 
+
+
+### MongoDB Query - Problem 3
+
+- Requirement: Delete the user with the email "alicewilliams@example.com" from the user collection.
+
+- Here we get the email as a query from the user to search based on the email field and delete the document. 
+
+- The solution is as follows
+
+```javascript
+// In queryRoutes.js file add following
+
+router.delete("/problem3", QueryControllers.problem3)
+
+
+// In queryControllers.js file add following
+
+const problem3 = async (req, res) => {
+  const userCollection = mongoose.connection.db.collection("user");
+  try {
+    const { email } = req.query;
+    
+    const result = await userCollection.findOneAndDelete({ email: email });
+
+    res.status(200).json( { message: "User deleted successfully", user: result.value });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+export const QueryControllers = {
+  problem1, problem2,, problem3
+}
+```
+
+- Using postman if you hit "http://localhost:5000/api/query/problem3?email=alicesmith@example.com"route you can delete the document. "DELETE /api/query/problem3?email=alicesmith@example.com 200 362.624 ms - 374" This is the response from morgan in my console. This query took 374 milliseconds to delete the data. 
+
+- Learning: How to delete using a field value. How to get a query parameter from the frontend. 
+
+### MongoDB Query - Problem 4
+
+- Requirement: Find the user(s) with the highest age.
+
+- We need to use the sort method to get the document with the highest age value. The value of the age field inside the sort method should be -1 to get the highest value. Setting it to +1 will give the lowest value.
+
+- The solution is as follows
+
+```javascript
+// In queryRoutes.js file add following
+
+router.get("/problem4", QueryControllers.problem4)
+
+
+
+// In queryControllers.js file add following
+
+const problem4 = async (req, res) => {
+  const userCollection = mongoose.connection.db.collection("user");
+  try {
+    
+    const result = await userCollection.find().sort({age: -1}).limit(1).toArray();
+
+    res.status(200).json({ message: `Fetched ${result.length} documents`, result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+export const QueryControllers = {
+  problem1, problem2, problem3, problem4
+}
+```
+
+- Using postman if you hit "http://localhost:5000/api/query/problem4" route you can get the document. "GET /api/query/problem4 200 332.470 ms - 425" This is the response from morgan in my console. This query took 425 milliseconds to delete the data. 
+
+Learning: How to sort. How to get a document that has the highest or lowest value in a field.  
+
+### MongoDB Query - Problem 5
+
+- Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection.
+
+- It can be done in two ways. Using "countDocuments" method or using the "find" method together with the "count" method.
+
+- The solution is as follows
+
+```javascript
+// In queryRoutes.js file add following
+
+router.get("/problem5", QueryControllers.problem5)
+
+
+
+// In queryControllers.js file add following
+
+const problem5 = async (req, res) => {
+  const peopleCollection = mongoose.connection.db.collection("people");
+  try {
+    const { firstName, lastName } = req.query
+    console.log(firstName, lastName)
+    // const result = await peopleCollection.countDocuments({firstName, lastName})
+    const result = await peopleCollection.find({firstName, lastName}).count()
+
+    res.status(200).json({ message: `Fetched ${result} documents`, result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+export const QueryControllers = {
+  problem1, problem2, problem3, problem5
+}
+```
+
+- Using postman if you hit "http://localhost:5000/api/query/problem5?firstName=Pauline&lastName=Fournier" route you can get 67 as a result. "GET /api/query/problem5?firstName=Pauline&lastName=Fournier 200 744.065 ms - 46" This is the response from morgan in my console. This query took 744 milliseconds to get the count. 
+
+Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties.  
