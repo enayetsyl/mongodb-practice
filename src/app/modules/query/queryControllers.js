@@ -159,9 +159,16 @@ const problem9 = async (req, res) => {
 const problem10 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
-    const { firstName, lastName, dob } = req.query
-    
-    const result = await peopleCollection.find({firstName, lastName, birthDate: {$lt: new Date(dob)}}).count()
+    const { name, amount } = req.query
+    const amountNumber = parseFloat(amount)
+    const result = await peopleCollection.countDocuments( {
+        "payments.0.name": name,
+        "payments.0.amount": amountNumber
+    });
+    // const result = await peopleCollection.find( {
+    //     "payments.0.name": name,
+    //     "payments.0.amount": amountNumber
+    // }).count();
    
     res.status(200).json({ message: `Fetched ${result} documents`, result });
   } catch (error) {
@@ -169,6 +176,7 @@ const problem10 = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 const problem11 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
@@ -182,6 +190,7 @@ const problem11 = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 const problem12 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
@@ -195,6 +204,7 @@ const problem12 = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 const problem13 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
@@ -208,6 +218,7 @@ const problem13 = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 const problem14 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
@@ -221,6 +232,7 @@ const problem14 = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 const problem15 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
@@ -234,6 +246,7 @@ const problem15 = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 const problem16 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
@@ -247,6 +260,7 @@ const problem16 = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 const problem17 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
