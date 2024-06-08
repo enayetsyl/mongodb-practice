@@ -503,45 +503,57 @@ Learning: How to use the "countDocuments" and "count" methods to get the count o
 
 ### MongoDB Query - Problem 9
 
-- Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection and who were born before January 1, 1970..
+- Requirement: Count everyone who spent exactly $12.99 on the cinema.
 
 
-- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. For dates, you need to think in terms of comparison operators. If you want to find documents with dates in the past, you use $lt (less than), and if you want to find documents with dates in the future, you use $gt (greater than). We will use $lt as we want to count documents before January 1, 1970.
+- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. We will use "$elemMatch" operator to check whether in the payment array any object has "name" property with the value of "cinema" and amount property with the value of "12.99". As req.query provides us a string so we have to convert the amount to a float value.
 
 - The solution is as follows
 
 ```javascript
 // In queryRoutes.js file add following
 
-router.get("/problem6", QueryControllers.problem6)
+router.get("/problem9", QueryControllers.problem9)
 
 
 
 // In queryControllers.js file add following
 
-const problem6 = async (req, res) => {
+const problem9 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
-    const { firstName, lastName, dob } = req.query
-    
-    const result = await peopleCollection.find({firstName, lastName, birthDate: {$lt: new Date(dob)}}).count()
-    // const result = await peopleCollection.countDocuments({firstName, lastName, birthDate: {$lt: new Date(dob)}})
+    const { name, amount } = req.query
+    const amountNumber = parseFloat(amount)
 
+    const result = await peopleCollection.countDocuments({
+      "payments": {
+        $elemMatch: {
+          "name": name,
+          "amount":amountNumber
+        }
+      }
+    });
+    // const result = await peopleCollection.find({
+    //   "payments": {
+    //     $elemMatch: {
+    //       "name": name,
+    //       "amount":amountNumber
+    //     }
+    //   }
+    // }).count();
+   
     res.status(200).json({ message: `Fetched ${result} documents`, result });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
   }
 };
-
-export const QueryControllers = {
-  problem1, problem2, problem3, problem6
-}
 ```
 
-- Using postman if you hit "http://localhost:5000/api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01" route you can get 9 as a result. In the query if you use $gt then you will get 58 as a count result. "GET /api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01 200 724.974 ms - 44" This is the response from morgan in my console. This query took 744 milliseconds to get the count. 
+- Using postman if you hit "http://localhost:5000/api/query/problem9?name=cinema&amount=12.99" route you will get 270 as a result. "GET /api/query/problem9?name=cinema&amount=12.99 200 1374.581 ms - 48" This is the response from morgan in my console. This query took 1374 milliseconds to get the count. 
 
-Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $lt and $gt.   
+Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties in an array. How to use $elemMatch operator.   
+
 ### MongoDB Query - Problem 10
 
 - Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection and who were born before January 1, 1970..
