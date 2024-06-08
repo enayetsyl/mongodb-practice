@@ -404,3 +404,424 @@ export const QueryControllers = {
 - Using postman if you hit "http://localhost:5000/api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01" route you can get 9 as a result. In the query if you use $gt then you will get 58 as a count result. "GET /api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01 200 724.974 ms - 44" This is the response from morgan in my console. This query took 744 milliseconds to get the count. 
 
 Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $lt and $gt.   
+### MongoDB Query - Problem 7
+
+- Requirement: Count all people with:
+first name = Lucas last name= Dubois
+first name = Camille last name= Dubois
+
+
+- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. We also need to use "$or" operator, which will ensure that documents matching either one of the names are returned.
+
+- The solution is as follows
+
+```javascript
+// In queryRoutes.js file add following
+
+router.get("/problem7", QueryControllers.problem7)
+
+// In queryControllers.js file add following
+
+const problem7 = async (req, res) => {
+  const peopleCollection = mongoose.connection.db.collection("people");
+  try {
+    const { firstName, lastName,firstName1, lastName1 } = req.query
+    console.log(firstName, lastName,firstName1, lastName1)
+    const result = await peopleCollection.countDocuments({
+        $or: [
+            { firstName, lastName },
+            { firstName1, lastName1 }
+          ]
+        });
+          // const result = await peopleCollection.find({
+          //   $or: [
+          //     { firstName, lastName },
+          //     { firstName1, lastName1 }
+          //   ]
+          // }).count();
+   
+    res.status(200).json({ message: `Fetched ${result} documents`, result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const QueryControllers = {
+  problem1, problem2, problem3, problem7
+}
+```
+
+- Using postman if you hit "http://localhost:5000/api/query/problem7?firstName=Lucas&lastName=Dubois&firstName1=Camille&lastName1=Dubois" route you can get 103 as a result.  "GET /api/query/problem7?firstName=Lucas&lastName=Dubois&firstName1=Camille&lastName1=Dubois 200 786.518 ms - 48" This is the response from morgan in my console. This query took 786 milliseconds to get the count. 
+
+Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties.  
+
+### MongoDB Query - Problem 8
+
+- Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection and who were born before January 1, 1970..
+
+
+- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. For dates, you need to think in terms of comparison operators. If you want to find documents with dates in the past, you use $lt (less than), and if you want to find documents with dates in the future, you use $gt (greater than). We will use $lt as we want to count documents before January 1, 1970.
+
+- The solution is as follows
+
+```javascript
+// In queryRoutes.js file add following
+
+router.get("/problem6", QueryControllers.problem6)
+
+
+
+// In queryControllers.js file add following
+
+const problem6 = async (req, res) => {
+  const peopleCollection = mongoose.connection.db.collection("people");
+  try {
+    const { firstName, lastName, dob } = req.query
+    
+    const result = await peopleCollection.find({firstName, lastName, birthDate: {$lt: new Date(dob)}}).count()
+    // const result = await peopleCollection.countDocuments({firstName, lastName, birthDate: {$lt: new Date(dob)}})
+
+    res.status(200).json({ message: `Fetched ${result} documents`, result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const QueryControllers = {
+  problem1, problem2, problem3, problem6
+}
+```
+
+- Using postman if you hit "http://localhost:5000/api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01" route you can get 9 as a result. In the query if you use $gt then you will get 58 as a count result. "GET /api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01 200 724.974 ms - 44" This is the response from morgan in my console. This query took 744 milliseconds to get the count. 
+
+Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $lt and $gt.   
+### MongoDB Query - Problem 9
+
+- Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection and who were born before January 1, 1970..
+
+
+- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. For dates, you need to think in terms of comparison operators. If you want to find documents with dates in the past, you use $lt (less than), and if you want to find documents with dates in the future, you use $gt (greater than). We will use $lt as we want to count documents before January 1, 1970.
+
+- The solution is as follows
+
+```javascript
+// In queryRoutes.js file add following
+
+router.get("/problem6", QueryControllers.problem6)
+
+
+
+// In queryControllers.js file add following
+
+const problem6 = async (req, res) => {
+  const peopleCollection = mongoose.connection.db.collection("people");
+  try {
+    const { firstName, lastName, dob } = req.query
+    
+    const result = await peopleCollection.find({firstName, lastName, birthDate: {$lt: new Date(dob)}}).count()
+    // const result = await peopleCollection.countDocuments({firstName, lastName, birthDate: {$lt: new Date(dob)}})
+
+    res.status(200).json({ message: `Fetched ${result} documents`, result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const QueryControllers = {
+  problem1, problem2, problem3, problem6
+}
+```
+
+- Using postman if you hit "http://localhost:5000/api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01" route you can get 9 as a result. In the query if you use $gt then you will get 58 as a count result. "GET /api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01 200 724.974 ms - 44" This is the response from morgan in my console. This query took 744 milliseconds to get the count. 
+
+Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $lt and $gt.   
+### MongoDB Query - Problem 10
+
+- Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection and who were born before January 1, 1970..
+
+
+- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. For dates, you need to think in terms of comparison operators. If you want to find documents with dates in the past, you use $lt (less than), and if you want to find documents with dates in the future, you use $gt (greater than). We will use $lt as we want to count documents before January 1, 1970.
+
+- The solution is as follows
+
+```javascript
+// In queryRoutes.js file add following
+
+router.get("/problem6", QueryControllers.problem6)
+
+
+
+// In queryControllers.js file add following
+
+const problem6 = async (req, res) => {
+  const peopleCollection = mongoose.connection.db.collection("people");
+  try {
+    const { firstName, lastName, dob } = req.query
+    
+    const result = await peopleCollection.find({firstName, lastName, birthDate: {$lt: new Date(dob)}}).count()
+    // const result = await peopleCollection.countDocuments({firstName, lastName, birthDate: {$lt: new Date(dob)}})
+
+    res.status(200).json({ message: `Fetched ${result} documents`, result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const QueryControllers = {
+  problem1, problem2, problem3, problem6
+}
+```
+
+- Using postman if you hit "http://localhost:5000/api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01" route you can get 9 as a result. In the query if you use $gt then you will get 58 as a count result. "GET /api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01 200 724.974 ms - 44" This is the response from morgan in my console. This query took 744 milliseconds to get the count. 
+
+Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $lt and $gt.   
+### MongoDB Query - Problem 11
+
+- Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection and who were born before January 1, 1970..
+
+
+- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. For dates, you need to think in terms of comparison operators. If you want to find documents with dates in the past, you use $lt (less than), and if you want to find documents with dates in the future, you use $gt (greater than). We will use $lt as we want to count documents before January 1, 1970.
+
+- The solution is as follows
+
+```javascript
+// In queryRoutes.js file add following
+
+router.get("/problem6", QueryControllers.problem6)
+
+
+
+// In queryControllers.js file add following
+
+const problem6 = async (req, res) => {
+  const peopleCollection = mongoose.connection.db.collection("people");
+  try {
+    const { firstName, lastName, dob } = req.query
+    
+    const result = await peopleCollection.find({firstName, lastName, birthDate: {$lt: new Date(dob)}}).count()
+    // const result = await peopleCollection.countDocuments({firstName, lastName, birthDate: {$lt: new Date(dob)}})
+
+    res.status(200).json({ message: `Fetched ${result} documents`, result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const QueryControllers = {
+  problem1, problem2, problem3, problem6
+}
+```
+
+- Using postman if you hit "http://localhost:5000/api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01" route you can get 9 as a result. In the query if you use $gt then you will get 58 as a count result. "GET /api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01 200 724.974 ms - 44" This is the response from morgan in my console. This query took 744 milliseconds to get the count. 
+
+Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $lt and $gt.   
+### MongoDB Query - Problem 12
+
+- Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection and who were born before January 1, 1970..
+
+
+- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. For dates, you need to think in terms of comparison operators. If you want to find documents with dates in the past, you use $lt (less than), and if you want to find documents with dates in the future, you use $gt (greater than). We will use $lt as we want to count documents before January 1, 1970.
+
+- The solution is as follows
+
+```javascript
+// In queryRoutes.js file add following
+
+router.get("/problem6", QueryControllers.problem6)
+
+
+
+// In queryControllers.js file add following
+
+const problem6 = async (req, res) => {
+  const peopleCollection = mongoose.connection.db.collection("people");
+  try {
+    const { firstName, lastName, dob } = req.query
+    
+    const result = await peopleCollection.find({firstName, lastName, birthDate: {$lt: new Date(dob)}}).count()
+    // const result = await peopleCollection.countDocuments({firstName, lastName, birthDate: {$lt: new Date(dob)}})
+
+    res.status(200).json({ message: `Fetched ${result} documents`, result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const QueryControllers = {
+  problem1, problem2, problem3, problem6
+}
+```
+
+- Using postman if you hit "http://localhost:5000/api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01" route you can get 9 as a result. In the query if you use $gt then you will get 58 as a count result. "GET /api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01 200 724.974 ms - 44" This is the response from morgan in my console. This query took 744 milliseconds to get the count. 
+
+Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $lt and $gt.   
+### MongoDB Query - Problem 13
+
+- Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection and who were born before January 1, 1970..
+
+
+- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. For dates, you need to think in terms of comparison operators. If you want to find documents with dates in the past, you use $lt (less than), and if you want to find documents with dates in the future, you use $gt (greater than). We will use $lt as we want to count documents before January 1, 1970.
+
+- The solution is as follows
+
+```javascript
+// In queryRoutes.js file add following
+
+router.get("/problem6", QueryControllers.problem6)
+
+
+
+// In queryControllers.js file add following
+
+const problem6 = async (req, res) => {
+  const peopleCollection = mongoose.connection.db.collection("people");
+  try {
+    const { firstName, lastName, dob } = req.query
+    
+    const result = await peopleCollection.find({firstName, lastName, birthDate: {$lt: new Date(dob)}}).count()
+    // const result = await peopleCollection.countDocuments({firstName, lastName, birthDate: {$lt: new Date(dob)}})
+
+    res.status(200).json({ message: `Fetched ${result} documents`, result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const QueryControllers = {
+  problem1, problem2, problem3, problem6
+}
+```
+
+- Using postman if you hit "http://localhost:5000/api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01" route you can get 9 as a result. In the query if you use $gt then you will get 58 as a count result. "GET /api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01 200 724.974 ms - 44" This is the response from morgan in my console. This query took 744 milliseconds to get the count. 
+
+Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $lt and $gt.   
+### MongoDB Query - Problem 14
+
+- Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection and who were born before January 1, 1970..
+
+
+- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. For dates, you need to think in terms of comparison operators. If you want to find documents with dates in the past, you use $lt (less than), and if you want to find documents with dates in the future, you use $gt (greater than). We will use $lt as we want to count documents before January 1, 1970.
+
+- The solution is as follows
+
+```javascript
+// In queryRoutes.js file add following
+
+router.get("/problem6", QueryControllers.problem6)
+
+
+
+// In queryControllers.js file add following
+
+const problem6 = async (req, res) => {
+  const peopleCollection = mongoose.connection.db.collection("people");
+  try {
+    const { firstName, lastName, dob } = req.query
+    
+    const result = await peopleCollection.find({firstName, lastName, birthDate: {$lt: new Date(dob)}}).count()
+    // const result = await peopleCollection.countDocuments({firstName, lastName, birthDate: {$lt: new Date(dob)}})
+
+    res.status(200).json({ message: `Fetched ${result} documents`, result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const QueryControllers = {
+  problem1, problem2, problem3, problem6
+}
+```
+
+- Using postman if you hit "http://localhost:5000/api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01" route you can get 9 as a result. In the query if you use $gt then you will get 58 as a count result. "GET /api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01 200 724.974 ms - 44" This is the response from morgan in my console. This query took 744 milliseconds to get the count. 
+
+Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $lt and $gt.   
+### MongoDB Query - Problem 15
+
+- Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection and who were born before January 1, 1970..
+
+
+- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. For dates, you need to think in terms of comparison operators. If you want to find documents with dates in the past, you use $lt (less than), and if you want to find documents with dates in the future, you use $gt (greater than). We will use $lt as we want to count documents before January 1, 1970.
+
+- The solution is as follows
+
+```javascript
+// In queryRoutes.js file add following
+
+router.get("/problem6", QueryControllers.problem6)
+
+
+
+// In queryControllers.js file add following
+
+const problem6 = async (req, res) => {
+  const peopleCollection = mongoose.connection.db.collection("people");
+  try {
+    const { firstName, lastName, dob } = req.query
+    
+    const result = await peopleCollection.find({firstName, lastName, birthDate: {$lt: new Date(dob)}}).count()
+    // const result = await peopleCollection.countDocuments({firstName, lastName, birthDate: {$lt: new Date(dob)}})
+
+    res.status(200).json({ message: `Fetched ${result} documents`, result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const QueryControllers = {
+  problem1, problem2, problem3, problem6
+}
+```
+
+- Using postman if you hit "http://localhost:5000/api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01" route you can get 9 as a result. In the query if you use $gt then you will get 58 as a count result. "GET /api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01 200 724.974 ms - 44" This is the response from morgan in my console. This query took 744 milliseconds to get the count. 
+
+Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $lt and $gt.   
+### MongoDB Query - Problem 16
+
+- Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection and who were born before January 1, 1970..
+
+
+- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. For dates, you need to think in terms of comparison operators. If you want to find documents with dates in the past, you use $lt (less than), and if you want to find documents with dates in the future, you use $gt (greater than). We will use $lt as we want to count documents before January 1, 1970.
+
+- The solution is as follows
+
+```javascript
+// In queryRoutes.js file add following
+
+router.get("/problem6", QueryControllers.problem6)
+
+
+
+// In queryControllers.js file add following
+
+const problem6 = async (req, res) => {
+  const peopleCollection = mongoose.connection.db.collection("people");
+  try {
+    const { firstName, lastName, dob } = req.query
+    
+    const result = await peopleCollection.find({firstName, lastName, birthDate: {$lt: new Date(dob)}}).count()
+    // const result = await peopleCollection.countDocuments({firstName, lastName, birthDate: {$lt: new Date(dob)}})
+
+    res.status(200).json({ message: `Fetched ${result} documents`, result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const QueryControllers = {
+  problem1, problem2, problem3, problem6
+}
+```
+
+- Using postman if you hit "http://localhost:5000/api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01" route you can get 9 as a result. In the query if you use $gt then you will get 58 as a count result. "GET /api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01 200 724.974 ms - 44" This is the response from morgan in my console. This query took 744 milliseconds to get the count. 
+
+Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $lt and $gt.   
