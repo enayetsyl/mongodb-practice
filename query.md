@@ -404,6 +404,7 @@ export const QueryControllers = {
 - Using postman if you hit "http://localhost:5000/api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01" route you can get 9 as a result. In the query if you use $gt then you will get 58 as a count result. "GET /api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01 200 724.974 ms - 44" This is the response from morgan in my console. This query took 744 milliseconds to get the count. 
 
 Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $lt and $gt.   
+
 ### MongoDB Query - Problem 7
 
 - Requirement: Count all people with:
@@ -454,34 +455,36 @@ export const QueryControllers = {
 
 - Using postman if you hit "http://localhost:5000/api/query/problem7?firstName=Lucas&lastName=Dubois&firstName1=Camille&lastName1=Dubois" route you can get 103 as a result.  "GET /api/query/problem7?firstName=Lucas&lastName=Dubois&firstName1=Camille&lastName1=Dubois 200 786.518 ms - 48" This is the response from morgan in my console. This query took 786 milliseconds to get the count. 
 
-Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties.  
+Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the multiple value of specific properties. Use of "$or" operator.
 
 ### MongoDB Query - Problem 8
 
-- Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection and who were born before January 1, 1970..
+- Requirement: Count all the people who have "no credits". You can find credits in the field "wealth.credits.", this field is an array, because people can have one or more credits, if the array is empty then there are no credits.
 
 
-- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. For dates, you need to think in terms of comparison operators. If you want to find documents with dates in the past, you use $lt (less than), and if you want to find documents with dates in the future, you use $gt (greater than). We will use $lt as we want to count documents before January 1, 1970.
+- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. We will use "$exists" operator to checks if the wealth.credits field exists and "$size" operator to check its size is 0 (i.e., the array is empty).
 
 - The solution is as follows
 
 ```javascript
 // In queryRoutes.js file add following
 
-router.get("/problem6", QueryControllers.problem6)
-
-
+router.get("/problem8", QueryControllers.problem8)
 
 // In queryControllers.js file add following
 
-const problem6 = async (req, res) => {
+const problem8 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
     const { firstName, lastName, dob } = req.query
     
-    const result = await peopleCollection.find({firstName, lastName, birthDate: {$lt: new Date(dob)}}).count()
-    // const result = await peopleCollection.countDocuments({firstName, lastName, birthDate: {$lt: new Date(dob)}})
-
+    const result = await peopleCollection.countDocuments({
+      "wealth.credits": { $exists: true, $size: 0 }
+    });
+    // const result = await peopleCollection.find({
+    //   "wealth.credits": { $exists: true, $size: 0 }
+    // }).count();
+   
     res.status(200).json({ message: `Fetched ${result} documents`, result });
   } catch (error) {
     console.error(error);
@@ -490,13 +493,14 @@ const problem6 = async (req, res) => {
 };
 
 export const QueryControllers = {
-  problem1, problem2, problem3, problem6
+  problem1, problem2, problem3, problem8
 }
 ```
 
-- Using postman if you hit "http://localhost:5000/api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01" route you can get 9 as a result. In the query if you use $gt then you will get 58 as a count result. "GET /api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01 200 724.974 ms - 44" This is the response from morgan in my console. This query took 744 milliseconds to get the count. 
+- Using postman if you hit "http://localhost:5000/api/query/problem8" route you will get 83089 as a result. "GET /api/query/problem8 200 567.158 ms - 52" This is the response from morgan in my console. This query took 567 milliseconds to get the count. 
 
-Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $lt and $gt.   
+Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $exists and $size operator.  
+
 ### MongoDB Query - Problem 9
 
 - Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection and who were born before January 1, 1970..
