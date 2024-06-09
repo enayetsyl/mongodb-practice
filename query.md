@@ -645,29 +645,70 @@ Learning: How to use the "countDocuments" and "count" methods to get the count o
 
 ### MongoDB Query - Problem 12
 
-- Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection and who were born before January 1, 1970..
+- Requirement: Count all the "female" who spent more than "$100" on "shoes" and more than "$50" on "pants" in one bill.
 
 
-- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. For dates, you need to think in terms of comparison operators. If you want to find documents with dates in the past, you use $lt (less than), and if you want to find documents with dates in the future, you use $gt (greater than). We will use $lt as we want to count documents before January 1, 1970.
+- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. We will use "$and" operator so that documents match with all three conditions will be returned.  
 
 - The solution is as follows
 
 ```javascript
 // In queryRoutes.js file add following
 
-router.get("/problem6", QueryControllers.problem6)
+router.get("/problem12", QueryControllers.problem12)
 
 
 
 // In queryControllers.js file add following
 
-const problem6 = async (req, res) => {
+const problem12 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
-    const { firstName, lastName, dob } = req.query
-    
-    const result = await peopleCollection.find({firstName, lastName, birthDate: {$lt: new Date(dob)}}).count()
-    // const result = await peopleCollection.countDocuments({firstName, lastName, birthDate: {$lt: new Date(dob)}})
+    let { sex, name1, amount1, name2, amount2 } = req.query
+
+    amount1 = parseFloat(amount1)
+    amount2 = parseFloat(amount2)
+
+    const result = await peopleCollection.countDocuments({
+      $and: [
+        { "sex": sex },
+        {
+          payments: {
+            $elemMatch: {
+              "name": name1, "amount": { $gt: amount1 },
+            }
+          }
+        },
+        {
+          payments: {
+            $elemMatch: {
+              "name": name2, "amount": { $gt: amount2 },
+            }
+          }
+        }
+
+      ]
+    });
+    // const result = await peopleCollection.find({
+    //   $and: [
+    //     { "sex": sex },
+    //     {
+    //       payments: {
+    //         $elemMatch: {
+    //           "name": name1, "amount": { $gt: amount1 },
+    //         }
+    //       }
+    //     },
+    //     {
+    //       payments: {
+    //         $elemMatch: {
+    //           "name": name2, "amount": { $gt: amount2 },
+    //         }
+    //       }
+    //     }
+
+    //   ]
+    // }).count();
 
     res.status(200).json({ message: `Fetched ${result} documents`, result });
   } catch (error) {
@@ -681,9 +722,10 @@ export const QueryControllers = {
 }
 ```
 
-- Using postman if you hit "http://localhost:5000/api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01" route you can get 9 as a result. In the query if you use $gt then you will get 58 as a count result. "GET /api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01 200 724.974 ms - 44" This is the response from morgan in my console. This query took 744 milliseconds to get the count. 
+- Using postman if you hit "http://localhost:5000/api/query/problem12?sex=female&name1=shoes&amount1=100&name2=pants&amount2=50" route you will get 913 as a result. "GET /api/query/problem12?sex=female&name1=shoes&amount1=100&name2=pants&amount2=50 200 1068.037 ms - 48" this is the response from morgan in my console. This query took 1 seconds to get the count. 
 
-Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $lt and $gt.   
+Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $and operator to get documents that match more than one conditions.  
+
 ### MongoDB Query - Problem 13
 
 - Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection and who were born before January 1, 1970..
