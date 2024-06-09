@@ -21,9 +21,8 @@ router.get("/problem14", QueryControllers.problem14)
 router.get("/problem15", QueryControllers.problem15)
 router.get("/problem16", QueryControllers.problem16)
 router.get("/problem17", QueryControllers.problem17)
-router.get("/problem18", QueryControllers.problem18)
-router.get("/problem19", QueryControllers.problem19)
-router.get("/problem20", QueryControllers.problem20)
-router.get("/problem21", QueryControllers.problem21)
+router.put("/problem18", QueryControllers.problem18)
+router.delete("/problem19", QueryControllers.problem19)
+
 
 export const QueryRoutes = router;

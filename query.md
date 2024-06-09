@@ -728,29 +728,44 @@ Learning: How to use the "countDocuments" and "count" methods to get the count o
 
 ### MongoDB Query - Problem 13
 
-- Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection and who were born before January 1, 1970..
+- Requirement: Count all the people from "Warsaw", "Poland" who have been to the "cinema" but never to the "disco".
 
 
-- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. For dates, you need to think in terms of comparison operators. If you want to find documents with dates in the past, you use $lt (less than), and if you want to find documents with dates in the future, you use $gt (greater than). We will use $lt as we want to count documents before January 1, 1970.
+- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. We have to match "$an"d operator to match all conditions also "$elemMatch" to match exact value and $not to exclude a certain value.
 
 - The solution is as follows
 
 ```javascript
 // In queryRoutes.js file add following
 
-router.get("/problem6", QueryControllers.problem6)
+router.get("/problem13", QueryControllers.problem13)
 
 
 
 // In queryControllers.js file add following
 
-const problem6 = async (req, res) => {
+const problem13 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
-    const { firstName, lastName, dob } = req.query
-    
-    const result = await peopleCollection.find({firstName, lastName, birthDate: {$lt: new Date(dob)}}).count()
-    // const result = await peopleCollection.countDocuments({firstName, lastName, birthDate: {$lt: new Date(dob)}})
+    const { city, country, include, exclude } = req.query
+
+    const result = await peopleCollection.countDocuments(
+      {
+        $and: [
+          { "address.city": city },
+          { "address.country": country },
+          { "payments": { $elemMatch: { "name": include } } },
+          { "payments": { $not: { $elemMatch: { "name": exclude } } } },
+        ]
+      });
+    //     const result = await peopleCollection.find(
+    //       {$and: [
+    // {"address.city" : city},
+    // {"address.country" : country},
+    // {"payments" : {$elemMatch: {"name": include}}},
+    // {"payments" : {$not: {$elemMatch: {"name": exclude}}}},
+    //       ]}
+    //     ).count();
 
     res.status(200).json({ message: `Fetched ${result} documents`, result });
   } catch (error) {
@@ -758,40 +773,65 @@ const problem6 = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 export const QueryControllers = {
   problem1, problem2, problem3, problem6
 }
 ```
 
-- Using postman if you hit "http://localhost:5000/api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01" route you can get 9 as a result. In the query if you use $gt then you will get 58 as a count result. "GET /api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01 200 724.974 ms - 44" This is the response from morgan in my console. This query took 744 milliseconds to get the count. 
+- Using postman if you hit "http://localhost:5000/api/query/problem13?city=Warsaw&country=Poland&include=cinema&exclude=disco" route you will get 13352 as a result. "GET /api/query/problem13?city=Warsaw&country=Poland&include=cinema&exclude=disco 200 690.053 ms - 52" This is the response from morgan in my console. This query took 690 milliseconds to get the count. 
 
-Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $lt and $gt.   
+Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $and, $elemMatch and $not operator.   
+
 ### MongoDB Query - Problem 14
 
-- Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection and who were born before January 1, 1970..
+- Requirement: Count all the "female" from "Paris" and "male" from "Cracow" that have all of the following properties: flat, house, land.
+At least one of the properties must be valued at more than "$2,000,000", and none of the properties under "$500,000".
 
 
-- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. For dates, you need to think in terms of comparison operators. If you want to find documents with dates in the past, you use $lt (less than), and if you want to find documents with dates in the future, you use $gt (greater than). We will use $lt as we want to count documents before January 1, 1970.
+- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. For this query we need to implement several nested query.
 
 - The solution is as follows
 
 ```javascript
 // In queryRoutes.js file add following
 
-router.get("/problem6", QueryControllers.problem6)
+router.get("/problem14", QueryControllers.problem14)
 
 
 
 // In queryControllers.js file add following
 
-const problem6 = async (req, res) => {
+const problem14 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
-    const { firstName, lastName, dob } = req.query
+    let { male, female, city1, city2, flat, house, land, include, exclude } = req.query
+
+    include = parseFloat(include)
+    exclude = parseFloat(exclude)
+
+    const result = await peopleCollection.countDocuments(
+      {$and: [
+        {$or: [ {$and: [{ "sex" : female}, {"address.city" : city1}]}, {$and: [{ "sex" : male}, {"address.city" : city2}]}] },
+        {"wealth.realEstates" : {$elemMatch: {"type" : flat}}},
+        {"wealth.realEstates" : {$elemMatch: {"type" : house}}},
+        {"wealth.realEstates" : {$elemMatch: {"type" : land}}},
+        {"wealth.realEstates" : {$elemMatch: {"worth" : {$gt: include}}}},
+        {"wealth.realEstates" : {$not: {$elemMatch: {"worth" : {$lt: exclude}}}}},
+       
+      ]}
+    )
+    // const result = await peopleCollection.find(
+    //   {$and: [
+    //     {$or: [ {$and: [{ "sex" : female}, {"address.city" : city1}]}, {$and: [{ "sex" : male}, {"address.city" : city2}]}] },
+    //     {"wealth.realEstates" : {$elemMatch: {"type" : flat}}},
+    //     {"wealth.realEstates" : {$elemMatch: {"type" : house}}},
+    //     {"wealth.realEstates" : {$elemMatch: {"type" : land}}},
+    //     {"wealth.realEstates" : {$elemMatch: {"worth" : {$gt: include}}}},
+    //     {"wealth.realEstates" : {$not: {$elemMatch: {"worth" : {$lt: exclude}}}}},
+       
+    //   ]}
+    // ).count()
     
-    const result = await peopleCollection.find({firstName, lastName, birthDate: {$lt: new Date(dob)}}).count()
-    // const result = await peopleCollection.countDocuments({firstName, lastName, birthDate: {$lt: new Date(dob)}})
 
     res.status(200).json({ message: `Fetched ${result} documents`, result });
   } catch (error) {
@@ -805,34 +845,37 @@ export const QueryControllers = {
 }
 ```
 
-- Using postman if you hit "http://localhost:5000/api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01" route you can get 9 as a result. In the query if you use $gt then you will get 58 as a count result. "GET /api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01 200 724.974 ms - 44" This is the response from morgan in my console. This query took 744 milliseconds to get the count. 
+- Using postman if you hit "http://localhost:5000/api/query/problem14?female=female&male=male&city1=Paris&city2=Cracow&flat=flat&house=house&land=land&include=2000000&exclude=500000" route you will get 23 as a result. In the query if you use $gt then you will get 58 as a count result. "GET /api/query/problem14?female=female&male=male&city1=Paris&city2=Cracow&flat=flat&house=house&land=land&include=2000000&exclude=500000 200 695.668 ms - 46" This is the response from morgan in my console. This query took 695 milliseconds to get the count. 
 
-Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $lt and $gt.   
+Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $lt,  $gt $and, $or, $elemMatch, $not operator.   
+
 ### MongoDB Query - Problem 15
 
-- Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection and who were born before January 1, 1970..
+- Requirement: Count all the people who have exactly "10" transactions.
 
 
-- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. For dates, you need to think in terms of comparison operators. If you want to find documents with dates in the past, you use $lt (less than), and if you want to find documents with dates in the future, you use $gt (greater than). We will use $lt as we want to count documents before January 1, 1970.
+- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. We have to use $match operator to get the result.
 
 - The solution is as follows
 
 ```javascript
 // In queryRoutes.js file add following
 
-router.get("/problem6", QueryControllers.problem6)
+router.get("/problem15", QueryControllers.problem15)
 
 
 
 // In queryControllers.js file add following
 
-const problem6 = async (req, res) => {
+const problem15 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
-    const { firstName, lastName, dob } = req.query
-    
-    const result = await peopleCollection.find({firstName, lastName, birthDate: {$lt: new Date(dob)}}).count()
-    // const result = await peopleCollection.countDocuments({firstName, lastName, birthDate: {$lt: new Date(dob)}})
+    let { size } = req.query
+    size = parseFloat(size)
+
+    const result = await peopleCollection.countDocuments({payments : {$size: size}})
+
+    // const result = await peopleCollection.find({payments : {$size: size}}).count()
 
     res.status(200).json({ message: `Fetched ${result} documents`, result });
   } catch (error) {
@@ -842,40 +885,40 @@ const problem6 = async (req, res) => {
 };
 
 export const QueryControllers = {
-  problem1, problem2, problem3, problem6
+  problem1, problem2, problem3, problem15
 }
 ```
 
-- Using postman if you hit "http://localhost:5000/api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01" route you can get 9 as a result. In the query if you use $gt then you will get 58 as a count result. "GET /api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01 200 724.974 ms - 44" This is the response from morgan in my console. This query took 744 milliseconds to get the count. 
+- Using postman if you hit "http://localhost:5000/api/query/problem15?size=10" route you will get 179972 as a result. "GET /api/query/problem15?size=10 200 486.860 ms - 54" This is the response from morgan in my console. This query took 486 milliseconds to get the count. 
 
-Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $lt and $gt.   
+Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $match operator.   
+
 ### MongoDB Query - Problem 16
 
-- Requirement: Count all the people with first name "Pauline" and last name "Fournier" in the people collection and who were born before January 1, 1970..
+- Requirement: Finds all people with "firstName" = 'Thomas' and returns only the following fields: "_id", "firstName" and "lastName".
 
 
-- It can be done in two ways: using the "countDocuments" method or using the "find" method together with the "count" method. For dates, you need to think in terms of comparison operators. If you want to find documents with dates in the past, you use $lt (less than), and if you want to find documents with dates in the future, you use $gt (greater than). We will use $lt as we want to count documents before January 1, 1970.
+- It can be done "find" method together with the "project" method. Three fields need to return. It will help to save bandwidth.
 
 - The solution is as follows
 
 ```javascript
 // In queryRoutes.js file add following
 
-router.get("/problem6", QueryControllers.problem6)
+router.get("/problem16", QueryControllers.problem16)
 
 
 
 // In queryControllers.js file add following
 
-const problem6 = async (req, res) => {
+const problem16 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
-    const { firstName, lastName, dob } = req.query
-    
-    const result = await peopleCollection.find({firstName, lastName, birthDate: {$lt: new Date(dob)}}).count()
-    // const result = await peopleCollection.countDocuments({firstName, lastName, birthDate: {$lt: new Date(dob)}})
+    const { firstName } = req.query
 
-    res.status(200).json({ message: `Fetched ${result} documents`, result });
+    const result = await peopleCollection.find({ firstName}).project({firstName:1, _id:1, lastName:1}).toArray()
+
+    res.status(200).json({ message: `Fetched ${result.length} documents`, result });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
@@ -883,10 +926,145 @@ const problem6 = async (req, res) => {
 };
 
 export const QueryControllers = {
-  problem1, problem2, problem3, problem6
+  problem1, problem2, problem3, problem16
 }
 ```
 
-- Using postman if you hit "http://localhost:5000/api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01" route you can get 9 as a result. In the query if you use $gt then you will get 58 as a count result. "GET /api/query/problem6?firstName=Pauline&lastName=Fournier&dob=1970-01-01 200 724.974 ms - 44" This is the response from morgan in my console. This query took 744 milliseconds to get the count. 
+- Using postman if you hit "http://localhost:5000/api/query/problem16?firstName=Thomas" route you will get 5069 documents as a result. "GET /api/query/problem16?firstName=Thomas 200 2656.281 ms - 386049" This is the response from morgan in my console. This query took 2656 milliseconds to get the results. 
 
-Learning: How to use the "countDocuments" and "count" methods to get the count of documents that match the value of specific properties. How to use $lt and $gt.   
+Learning: Searching database based on field value and returning certain fields.   
+
+### MongoDB Query - Problem 17
+
+- Requirement: Find everyone who has one or more transactions worth less than $5.
+
+The returned results only include the "firstName", "lastName" and "payments" fields containing only the first word whose amount is less than 5$.
+
+
+- It can be done "find" method together with the "project" or "field filtering" method. Four fields need to return. It will help to save bandwidth.
+
+- The solution is as follows
+
+```javascript
+// In queryRoutes.js file add following
+
+router.get("/problem17", QueryControllers.problem17)
+
+
+
+// In queryControllers.js file add following
+
+const problem17 = async (req, res) => {
+  const peopleCollection = mongoose.connection.db.collection("people");
+  try {
+    let { amount } = req.query
+    amount = parseFloat(amount)
+    // const result = await peopleCollection.find({ "payments" : { $elemMatch: {"amount": {$lt: amount}}} }).project({_id:1, firstName: 1, lastName: 1, "payments.$": 1}).toArray()
+    const result = await peopleCollection.find({ "payments" : { $elemMatch: {"amount": {$lt: amount}}} },{_id: 1, firstName: 1, lastName: 1, "payments.$": 1}).toArray()
+
+    res.status(200).json({ message: `Fetched ${result.length} documents`, result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const QueryControllers = {
+  problem1, problem2, problem3, problem17
+}
+```
+
+- Using postman if you hit "http://localhost:5000/api/query/problem17?amount=5" route you will get 7785 documents as a result. "GET /api/query/problem17?amount=5 200 15519.453 ms - 7730256" This is the response from morgan in my console. This query took 15 seconds to get the results. 
+
+Learning: Searching database based on field value and returning certain fields using project and field filtering.   
+
+### MongoDB Query - Problem 18
+
+- Requirement: Add an element to the payments of people who are in "France" with the following structure:
+{
+ category: "relax",
+ name: "disco",
+ amount: 5.06
+}
+
+- It can be done using both "updateOne" and "updateMany" method and $addToSet method. 
+
+- The solution is as follows
+
+```javascript
+// In queryRoutes.js file add following
+
+router.put("/problem18", QueryControllers.problem18)
+
+
+
+// In queryControllers.js file add following
+
+const problem18 = async (req, res) => {
+  const peopleCollection = mongoose.connection.db.collection("people");
+  try {
+    let { country, category, name, amount } = req.query
+
+    amount = parseFloat(amount)
+
+    // const result = await peopleCollection.updateOne({"address.country" : country},
+    //   {$addToSet:{"payments" : { "category" : category, "name": name, "amount": amount}}}
+    // )
+    const result = await peopleCollection.updateMany({"address.country" : country},
+      {$addToSet:{"payments" : { "category" : category, "name": name, "amount": amount}}}
+    )
+
+    res.status(200).json({ message: `Modified ${result.modifiedCount} documents`, result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const QueryControllers = {
+  problem1, problem2, problem3, problem18
+}
+```
+
+- Using postman if you hit "http://localhost:5000/api/query/problem18?country=France&category=relax&name=disco&amount=5.06" route you will update 101233 documents as a result. "GET /api/query/problem18?country=France&category=relax&name=disco&amount=5.07 200 102983.157 ms - 153" This is the response from morgan in my console. This query took 102 seconds to update the documents. 
+
+Learning: Searching database based on field value and returning certain fields.   
+
+### MongoDB Query - Problem 19
+
+- Requirement: Delete all of everyone's market fields.
+
+
+- It can be done using $unset operator. 
+
+- The solution is as follows
+
+```javascript
+// In queryRoutes.js file add following
+
+router.delete("/problem19", QueryControllers.problem19)
+
+
+
+// In queryControllers.js file add following
+
+const problem19 = async (req, res) => {
+  const peopleCollection = mongoose.connection.db.collection("people");
+  try {
+    const result = await peopleCollection.updateMany({},{$unset: {"wealth.market" : ""}})
+
+    res.status(200).json({ message: `Deleted ${result.modifiedCount} documents market value`, result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const QueryControllers = {
+  problem1, problem2, problem3, problem16
+}
+```
+
+- Using postman if you hit "http://localhost:5000/api/query/problem19" route you will modified 200000 documents as a result. "DELETE /api/query/problem19 200 124219.830 ms - 163" This is the response from morgan in my console. This query took 124 seconds to delete the data. 
+
+Learning: Deleting value of a specific field in all documents. How to use $unset operator.

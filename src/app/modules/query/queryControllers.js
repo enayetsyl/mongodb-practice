@@ -255,9 +255,25 @@ const problem12 = async (req, res) => {
 const problem13 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
-    const { firstName, lastName, dob } = req.query
+    const { city, country, include, exclude } = req.query
 
-    const result = await peopleCollection.find({ firstName, lastName, birthDate: { $lt: new Date(dob) } }).count()
+    const result = await peopleCollection.countDocuments(
+      {
+        $and: [
+          { "address.city": city },
+          { "address.country": country },
+          { "payments": { $elemMatch: { "name": include } } },
+          { "payments": { $not: { $elemMatch: { "name": exclude } } } },
+        ]
+      });
+    //     const result = await peopleCollection.find(
+    //       {$and: [
+    // {"address.city" : city},
+    // {"address.country" : country},
+    // {"payments" : {$elemMatch: {"name": include}}},
+    // {"payments" : {$not: {$elemMatch: {"name": exclude}}}},
+    //       ]}
+    //     ).count();
 
     res.status(200).json({ message: `Fetched ${result} documents`, result });
   } catch (error) {
@@ -269,9 +285,34 @@ const problem13 = async (req, res) => {
 const problem14 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
-    const { firstName, lastName, dob } = req.query
+    let { male, female, city1, city2, flat, house, land, include, exclude } = req.query
 
-    const result = await peopleCollection.find({ firstName, lastName, birthDate: { $lt: new Date(dob) } }).count()
+    include = parseFloat(include)
+    exclude = parseFloat(exclude)
+
+    const result = await peopleCollection.countDocuments(
+      {$and: [
+        {$or: [ {$and: [{ "sex" : female}, {"address.city" : city1}]}, {$and: [{ "sex" : male}, {"address.city" : city2}]}] },
+        {"wealth.realEstates" : {$elemMatch: {"type" : flat}}},
+        {"wealth.realEstates" : {$elemMatch: {"type" : house}}},
+        {"wealth.realEstates" : {$elemMatch: {"type" : land}}},
+        {"wealth.realEstates" : {$elemMatch: {"worth" : {$gt: include}}}},
+        {"wealth.realEstates" : {$not: {$elemMatch: {"worth" : {$lt: exclude}}}}},
+       
+      ]}
+    )
+    // const result = await peopleCollection.find(
+    //   {$and: [
+    //     {$or: [ {$and: [{ "sex" : female}, {"address.city" : city1}]}, {$and: [{ "sex" : male}, {"address.city" : city2}]}] },
+    //     {"wealth.realEstates" : {$elemMatch: {"type" : flat}}},
+    //     {"wealth.realEstates" : {$elemMatch: {"type" : house}}},
+    //     {"wealth.realEstates" : {$elemMatch: {"type" : land}}},
+    //     {"wealth.realEstates" : {$elemMatch: {"worth" : {$gt: include}}}},
+    //     {"wealth.realEstates" : {$not: {$elemMatch: {"worth" : {$lt: exclude}}}}},
+       
+    //   ]}
+    // ).count()
+    
 
     res.status(200).json({ message: `Fetched ${result} documents`, result });
   } catch (error) {
@@ -283,9 +324,12 @@ const problem14 = async (req, res) => {
 const problem15 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
-    const { firstName, lastName, dob } = req.query
+    let { size } = req.query
+    size = parseFloat(size)
 
-    const result = await peopleCollection.find({ firstName, lastName, birthDate: { $lt: new Date(dob) } }).count()
+    const result = await peopleCollection.countDocuments({payments : {$size: size}})
+
+    // const result = await peopleCollection.find({payments : {$size: size}}).count()
 
     res.status(200).json({ message: `Fetched ${result} documents`, result });
   } catch (error) {
@@ -297,11 +341,11 @@ const problem15 = async (req, res) => {
 const problem16 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
-    const { firstName, lastName, dob } = req.query
+    const { firstName } = req.query
 
-    const result = await peopleCollection.find({ firstName, lastName, birthDate: { $lt: new Date(dob) } }).count()
+    const result = await peopleCollection.find({ firstName}).project({firstName:1, _id:1, lastName:1}).toArray()
 
-    res.status(200).json({ message: `Fetched ${result} documents`, result });
+    res.status(200).json({ message: `Fetched ${result.length} documents`, result });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
@@ -311,70 +355,54 @@ const problem16 = async (req, res) => {
 const problem17 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
-    const { firstName, lastName, dob } = req.query
+    let { amount } = req.query
+    amount = parseFloat(amount)
+    // const result = await peopleCollection.find({ "payments" : { $elemMatch: {"amount": {$lt: amount}}} }).project({_id:1, firstName: 1, lastName: 1, "payments.$": 1}).toArray()
+    const result = await peopleCollection.find({ "payments" : { $elemMatch: {"amount": {$lt: amount}}} },{_id: 1, firstName: 1, lastName: 1, "payments.$": 1}).toArray()
 
-    const result = await peopleCollection.find({ firstName, lastName, birthDate: { $lt: new Date(dob) } }).count()
-
-    res.status(200).json({ message: `Fetched ${result} documents`, result });
+    res.status(200).json({ message: `Fetched ${result.length} documents`, result });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
   }
 };
+
 const problem18 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
-    const { firstName, lastName, dob } = req.query
+    let { country, category, name, amount } = req.query
 
-    const result = await peopleCollection.find({ firstName, lastName, birthDate: { $lt: new Date(dob) } }).count()
+    amount = parseFloat(amount)
 
-    res.status(200).json({ message: `Fetched ${result} documents`, result });
+    // const result = await peopleCollection.updateOne({"address.country" : country},
+    //   {$addToSet:{"payments" : { "category" : category, "name": name, "amount": amount}}}
+    // )
+    const result = await peopleCollection.updateMany({"address.country" : country},
+      {$addToSet:{"payments" : { "category" : category, "name": name, "amount": amount}}}
+    )
+
+    res.status(200).json({ message: `Modified ${result.modifiedCount} documents`, result });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
   }
 };
+
 const problem19 = async (req, res) => {
   const peopleCollection = mongoose.connection.db.collection("people");
   try {
-    const { firstName, lastName, dob } = req.query
+    const result = await peopleCollection.updateMany({},{$unset: {"wealth.market" : ""}})
 
-    const result = await peopleCollection.find({ firstName, lastName, birthDate: { $lt: new Date(dob) } }).count()
-
-    res.status(200).json({ message: `Fetched ${result} documents`, result });
+    res.status(200).json({ message: `Deleted ${result.modifiedCount} documents market value`, result });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });
   }
 };
-const problem20 = async (req, res) => {
-  const peopleCollection = mongoose.connection.db.collection("people");
-  try {
-    const { firstName, lastName, dob } = req.query
 
-    const result = await peopleCollection.find({ firstName, lastName, birthDate: { $lt: new Date(dob) } }).count()
 
-    res.status(200).json({ message: `Fetched ${result} documents`, result });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: error.message });
-  }
-};
-const problem21 = async (req, res) => {
-  const peopleCollection = mongoose.connection.db.collection("people");
-  try {
-    const { firstName, lastName, dob } = req.query
-
-    const result = await peopleCollection.find({ firstName, lastName, birthDate: { $lt: new Date(dob) } }).count()
-
-    res.status(200).json({ message: `Fetched ${result} documents`, result });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: error.message });
-  }
-};
 
 
 export const QueryControllers = {
-  problem1, problem2, problem3, problem4, problem5, problem6, problem7, problem8, problem9, problem10, problem11, problem12, problem13, problem14, problem15, problem16, problem17, problem18, problem19, problem20, problem21
+  problem1, problem2, problem3, problem4, problem5, problem6, problem7, problem8, problem9, problem10, problem11, problem12, problem13, problem14, problem15, problem16, problem17, problem18, problem19
 }
